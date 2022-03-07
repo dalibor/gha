@@ -14,8 +14,14 @@ jobs:
     name: ${{ matrix.os }} ruby-${{ matrix.ruby }}
     strategy:
       matrix:
-        os: [ ubuntu-20.04, macos-11 ]
-        ruby: [ '3.1' ]
+        include:
+          - os: ubuntu-20.04
+            ruby: '3.1'
+          - os: macos-11
+            ruby: '3.1'
+          - os: ubuntu-20.04
+            ruby: '3.1'
+            qemu: true
       fail-fast: false
 
     steps:
@@ -28,27 +34,21 @@ jobs:
           bundler: default
           bundler-cache: true
 
-      - name: Install Linux x86_64-linux
-        if: matrix.os == 'ubuntu-20.04'
-        shell: bash
-        run: |
-          gem install asherah --pre
-          gem which asherah
-
-      - name: Install Linux aarch64-linux
-        if: matrix.os == 'ubuntu-20.04'
+      - name: Test Asherah
         shell: bash
         run: |
           git clone https://github.com/godaddy/asherah-ruby.git
           cd asherah-ruby
+          gem install asherah --pre
+          gem which asherah
+          bundle install
+          ruby spec/smoke_test.rb
+
+      - name: Test Asherah on arm64
+        if: matrix.qemu == 'true'
+        shell: bash
+        run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           docker run --rm -v "$(pwd):/asherah-ruby" --platform=linux/arm64/v8 \
             ruby:${{matrix.ruby}} \
             /bin/sh -c "cd /asherah-ruby; bundle install; gem install asherah --pre; gem which asherah; ruby spec/smoke_test.rb"
-
-      - name: Install Darwin x86_64-darwin
-        if: matrix.os == 'macos-11'
-        shell: bash
-        run: |
-          gem install asherah --pre
-          gem which asherah
