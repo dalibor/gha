@@ -45,7 +45,7 @@ jobs:
           ruby spec/smoke_test.rb
 
       - name: Test Asherah on arm64
-        if: matrix.qemu == 'true'
+        if: matrix.qemu == true
         shell: bash
         run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
