@@ -35,6 +35,7 @@ jobs:
           bundler-cache: true
 
       - name: Test Asherah
+        if: matrix.qemu != true
         shell: bash
         run: |
           git clone https://github.com/godaddy/asherah-ruby.git
