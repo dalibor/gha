@@ -28,14 +28,24 @@ jobs:
           bundler: default
           bundler-cache: true
 
-      - name: Install Linux
+      - name: Install Linux x86_64-linux
         if: matrix.os == 'ubuntu-20.04'
         shell: bash
         run: |
           gem install asherah --pre
           gem which asherah
 
-      - name: Install Darwin
+      - name: Install Linux aarch64-linux
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run --rm --platform=linux/arm64/v8 \
+            ruby:${{matrix.ruby}} \
+            gem install asherah --pre \
+            gem which asherah \
+
+      - name: Install Darwin x86_64-darwin
         if: matrix.os == 'macos-11'
         shell: bash
         run: |
