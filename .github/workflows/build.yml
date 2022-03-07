@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ruby-${{ matrix.ruby }}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, macos-11 ]
+        ruby: [ '3.1' ]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler: default
+          bundler-cache: true
+
+      - name: Install Linux
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          gem install asherah --pre
+          gem which asherah
+
+      - name: Install Darwin
+        if: matrix.os == 'macos-11'
+        shell: bash
+        run: |
+          gem install asherah --pre
+          gem which asherah
