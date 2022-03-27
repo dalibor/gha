@@ -1,0 +1,96 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ruby-${{ matrix.ruby }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            ruby: '3.1'
+          - os: macos-11
+            ruby: '3.1'
+          - os: ubuntu-20.04
+            ruby: '3.1'
+            qemu: true
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler: default
+          bundler-cache: true
+
+      - name: Test Asherah
+        if: matrix.qemu != true
+        shell: bash
+        run: |
+          git clone https://github.com/godaddy/asherah-ruby.git
+          cd asherah-ruby
+          bundle install
+          gem install asherah
+          gem which asherah
+          ruby spec/smoke_test.rb
+
+      - name: Test Asherah on arm64 linux
+        if: ${{ matrix.qemu == true && matrix.os == 'ubuntu-20.04' }}
+        shell: bash
+        run: |
+          git clone https://github.com/godaddy/asherah-ruby.git
+          cd asherah-ruby
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run --rm -v "$(pwd):/asherah-ruby" --platform=linux/arm64/v8 \
+            ruby:${{matrix.ruby}} \
+            /bin/sh -c "cd /asherah-ruby; bundle install; gem install asherah; gem which asherah; ruby spec/smoke_test.rb"
+
+  build_macos:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ruby-${{ matrix.ruby }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-11
+            ruby: '3.1'
+            qemu: true
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler: default
+          bundler-cache: true
+
+      - uses: docker-practice/actions-setup-docker@master
+      - run: |
+          set -x
+          docker version
+          docker run --rm hello-world
+
+      - name: Test Asherah on arm64 macos
+        if: ${{ matrix.qemu == true && matrix.os == 'macos-11' }}
+        shell: bash
+        run: |
+          git clone https://github.com/godaddy/asherah-ruby.git
+          cd asherah-ruby
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run --rm -v "$(pwd):/asherah-ruby" --platform=darwin/arm64/v8 \
+            ruby:${{matrix.ruby}} \
+            /bin/sh -c "cd /asherah-ruby; ruby -e 'puts RUBY_PLATFORM'; bundle install; gem install asherah; gem which asherah; ruby spec/smoke_test.rb"
+
