@@ -41,7 +41,7 @@ jobs:
           git clone https://github.com/godaddy/asherah-ruby.git
           cd asherah-ruby
           bundle install
-          gem install asherah --pre
+          gem install asherah
           gem which asherah
           ruby spec/smoke_test.rb
 
@@ -54,7 +54,7 @@ jobs:
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           docker run --rm -v "$(pwd):/asherah-ruby" --platform=linux/arm64/v8 \
             ruby:${{matrix.ruby}} \
-            /bin/sh -c "cd /asherah-ruby; bundle install; gem install asherah --pre; gem which asherah; ruby spec/smoke_test.rb"
+            /bin/sh -c "cd /asherah-ruby; bundle install; gem install asherah; gem which asherah; ruby spec/smoke_test.rb"
 
   build_macos:
     runs-on: ${{ matrix.os }}
@@ -90,7 +90,7 @@ jobs:
           git clone https://github.com/godaddy/asherah-ruby.git
           cd asherah-ruby
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          docker run --rm -v "$(pwd):/asherah-ruby" --platform=linux/arm64/v8 \
+          docker run --rm -v "$(pwd):/asherah-ruby" --platform=darwin/arm64/v8 \
             ruby:${{matrix.ruby}} \
-            /bin/sh -c "cd /asherah-ruby; bundle install; gem install asherah --pre; gem which asherah; ruby spec/smoke_test.rb"
+            /bin/sh -c "cd /asherah-ruby; ruby -e 'puts RUBY_PLATFORM'; bundle install; gem install asherah; gem which asherah; ruby spec/smoke_test.rb"
 
