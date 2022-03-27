@@ -48,10 +48,23 @@ jobs:
           gem which asherah
           ruby spec/smoke_test.rb
 
-      - name: Test Asherah on arm64
-        if: matrix.qemu == true
+      - name: Test Asherah on arm64 linux
+        if: ${{ matrix.qemu == true && matrix.os == ubuntu-20.04 }}
         shell: bash
         run: |
+          git clone https://github.com/godaddy/asherah-ruby.git
+          cd asherah-ruby
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run --rm -v "$(pwd):/asherah-ruby" --platform=linux/arm64/v8 \
+            ruby:${{matrix.ruby}} \
+            /bin/sh -c "cd /asherah-ruby; bundle install; gem install asherah --pre; gem which asherah; ruby spec/smoke_test.rb"
+
+      - name: Test Asherah on arm64 macos
+        if: ${{ matrix.qemu == true && matrix.os == macos-11 }}
+        shell: bash
+        run: |
+          brew install docker-machine docker
+          docker –version
           git clone https://github.com/godaddy/asherah-ruby.git
           cd asherah-ruby
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
